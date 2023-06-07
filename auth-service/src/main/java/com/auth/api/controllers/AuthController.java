@@ -6,7 +6,7 @@ import com.auth.api.dto.RegisterDto;
 import com.auth.api.enums.ErrorCode;
 import com.auth.api.exception.BasicException;
 import com.auth.api.models.Role;
-import com.auth.api.models.UserEntity;
+import com.auth.api.models.Users;
 import com.auth.api.repository.RoleRepository;
 import com.auth.api.repository.UserRepository;
 import com.auth.api.security.JWTGenerator;
@@ -67,7 +67,7 @@ public class AuthController {
                 loginDto.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String token = jwtGenerator.generateToken(authentication);
-        UserEntity user = userRepository.findByUsername(loginDto.getUsername()).get();
+        Users user = userRepository.findByUsername(loginDto.getUsername()).get();
         AuthResponseDTO response = new AuthResponseDTO(token, user);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -107,7 +107,7 @@ public class AuthController {
                     .errors(Collections.singletonList("Email " + registerDto.getEmail() + " is already registered"))
                     .build();
 
-        UserEntity user = new UserEntity();
+        Users user = new Users();
         user.setUsername(registerDto.getUsername());
         user.setPassword(passwordEncoder.encode((registerDto.getPassword())));
         user.setEmail(registerDto.getEmail());
