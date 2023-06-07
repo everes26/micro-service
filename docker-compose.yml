@@ -1,0 +1,40 @@
+version: '3'
+services:
+  auth:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    ports:
+      - 8084:8084
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/jwt_security
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=admin
+    depends_on:
+      - postgres
+    restart: always
+
+  status:
+    build:
+      context: ./status-service
+      dockerfile: Dockerfile
+    ports:
+      - 8082:8082
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/status
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=admin
+    depends_on:
+      - postgres
+    restart: always
+
+  postgres:
+    image: postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=jwt_security,status
+    ports:
+      - 5432:5432
+    volumes:
+      - ./data:/var/lib/postgresql/data

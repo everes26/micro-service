@@ -1,0 +1,47 @@
+version: "3"
+services:
+  kong:
+    build: .
+    container_name: kong
+    environment:
+      - ENV=dev
+      - KONG_DECLARATIVE_CONFIG=/usr/local/kong/decrelative/kong.yml
+      - KONG_PROXY_ACCESS_LOG=/dev/stdout custom_format
+      - KONG_ADMIN_ACCESS_LOG=/dev/stdout
+      - KONG_PROXY_ERROR_LOG=/dev/stderr
+      - KONG_ADMIN_ERROR_LOG=/dev/stderr
+      - KONG_LOG_LEVEL=debug
+    command: >
+      /bin/bash -c "kong start"
+    restart: on-failure
+    ports:
+      - 8000:8000
+    networks:
+      - kong-net
+
+  konga:
+    image: pantsel/konga
+    container_name: konga
+    restart: always
+    environment:
+      - NODE_ENV=production
+    ports:
+      - 1337:1337
+    networks:
+      - kong-net
+
+  # nginx:
+  #   image: nginx:latest
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
+  #   ports:
+  #     - "80:80"
+  #   networks:
+  #     - kong-net
+
+networks:
+  kong-net:
+    driver: bridge
+
+#Address Konga http://localhost:1337 
+#Kong Admin URL http://kong:8001

@@ -1,0 +1,93 @@
+_format_version: "1.1"
+
+services:
+  # service-1
+- name: service-1
+  url: http://10.90.81.25:8086
+  routes:
+  - name: service-1
+    paths:
+    - /service-1
+
+  # auth-service
+- name: auth
+  url: http://10.90.81.25:8084
+  routes:
+  - name: auth
+    paths:
+    - /auth
+
+  # status-service
+- name: status
+  # url: http://10.90.81.25:8080
+  url: http://upstream-status
+  routes:
+  - name: status
+    paths:
+    - /status
+
+upstreams:
+- name: upstream-status
+  healthchecks:
+    active:
+      concurrency: 10
+      healthy:
+        http_statuses: [200, 302]
+        interval: 10
+        successes: 0
+      http_path: "/health"
+      timeout: 1
+      unhealthy:
+        http_failures: 0
+        http_statuses: [429, 404, 500, 501, 502, 503, 504, 505]
+        tcp_failures: 0
+        timeouts: 0
+  #Round Robin (Xoay vòng)
+  #Least Connections (Ít kết nối nhất)
+  #IP Hash (Hash IP)
+  #Weighted Round Robin(Xoay vòng có trọng số)
+  algorithm: round-robin
+  targets:
+  - target: 10.90.81.25:8080
+    weight: 1
+  - target: 10.90.81.25:8082
+    weight: 1
+
+plugins:
+- name: maintain-API
+  service: service-1
+  config:
+    target_url: http://10.90.81.25:8086/maintain
+    api_maintain: 1
+
+- name: auth-custom
+  service: status
+  config:
+    target_url: http://10.90.81.25:8084/check
+
+- name: rate-limiting
+  config: 
+    minute: 50
+    hide_client_headers: true
+
+- name: response-transformer
+  config:
+     add:
+      headers:
+      - Gateway-API:Kong-Gateway-API
+
+- name: proxy-cache
+  service: service-1
+  config:
+    response_code:
+    - 200
+    request_method:
+    - GET
+    - POST
+    - HEAD
+    content_type:
+    - text/plain
+    - application/json
+    cache_ttl: 10
+    strategy: memory
+
